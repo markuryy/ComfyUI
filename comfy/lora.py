@@ -293,7 +293,16 @@ def model_lora_keys_unet(model, key_map={}):
                 key_lora = k[len("diffusion_model."):-len(".weight")]
                 key_map["{}".format(key_lora)] = k
 
-    if isinstance(model, comfy.model_base.QwenImage):
+    if isinstance(model, comfy.model_base.QwenImage): #QwenImage LoRA support
+        # SimpleTuner diffusers format support
+        diffusers_keys = comfy.utils.qwenimage_to_diffusers(model.model_config.unet_config, output_prefix="diffusion_model.")
+        for k in diffusers_keys:
+            if k.endswith(".weight"):
+                to = diffusers_keys[k]
+                key_lora = "transformer.{}".format(k[:-len(".weight")]) #SimpleTuner diffusers format
+                key_map[key_lora] = to
+
+        # Standard QwenImage LoRA formats
         for k in sdk:
             if k.startswith("diffusion_model.") and k.endswith(".weight"): #QwenImage lora format
                 key_lora = k[len("diffusion_model."):-len(".weight")]

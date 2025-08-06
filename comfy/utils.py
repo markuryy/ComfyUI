@@ -671,6 +671,26 @@ def flux_to_diffusers(mmdit_config, output_prefix=""):
 
     return key_map
 
+def qwenimage_to_diffusers(mmdit_config, output_prefix=""):
+    num_layers = mmdit_config.get("num_layers", 60)
+
+    key_map = {}
+    for index in range(num_layers):
+        prefix_from = "transformer_blocks.{}".format(index)
+        prefix_to = "{}transformer_blocks.{}".format(output_prefix, index)
+
+        block_map = {
+            "attn.to_q.weight": "attn.to_q.weight",
+            "attn.to_k.weight": "attn.to_k.weight",
+            "attn.to_v.weight": "attn.to_v.weight",
+            "attn.to_out.0.weight": "attn.to_out.0.weight",
+        }
+
+        for k in block_map:
+            key_map["{}.{}".format(prefix_from, k)] = "{}.{}".format(prefix_to, block_map[k])
+
+    return key_map
+
 def repeat_to_batch_size(tensor, batch_size, dim=0):
     if tensor.shape[dim] > batch_size:
         return tensor.narrow(dim, 0, batch_size)
